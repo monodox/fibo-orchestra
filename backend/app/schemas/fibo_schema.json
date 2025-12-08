@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Minimal FIBO Schema",
+  "type": "object",
+  "properties": {
+    "prompt_text": { "type": "string" },
+    "camera": { "type": "number" },
+    "fov": { "type": "number" },
+    "lighting": { "type": "string" },
+    "palette": { "type": "string" },
+    "hdr": { "type": "boolean" },
+    "composition": { "type": "object" }
+  },
+  "required": ["prompt_text", "camera", "fov"]
+}

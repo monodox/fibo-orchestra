@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+jsonschema
+python-dotenv
+pillow
+httpx
+replicate
+redis
+rq
+boto3
+pytest
+pytest-asyncio
+pytest-cov
+runware
