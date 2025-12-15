@@ -29,17 +29,112 @@ class SimpleDB:
             json.dump(self.data, f, indent=2)
     
     def _ensure_default_project(self):
-        """Create default project if none exist"""
+        """Create default project and demo data if none exist"""
         if not self.data["projects"]:
+            # Create default project
             default_project = {
                 "id": "default",
                 "name": "Default Project",
                 "description": "This is a default project setup to get started.",
                 "created_at": datetime.now().isoformat(),
                 "updated_at": datetime.now().isoformat(),
-                "render_count": 0
+                "render_count": 3
             }
             self.data["projects"]["default"] = default_project
+            
+            # Create demo project
+            demo_project = {
+                "id": "demo",
+                "name": "Demo Gallery",
+                "description": "Sample renders showcasing FIBO capabilities",
+                "created_at": (datetime.now().replace(day=1)).isoformat(),
+                "updated_at": datetime.now().isoformat(),
+                "render_count": 2
+            }
+            self.data["projects"]["demo"] = demo_project
+            
+            # Add demo renders
+            demo_renders = [
+                {
+                    "id": "demo1",
+                    "project_id": "default",
+                    "image_url": "https://picsum.photos/512/512?random=1",
+                    "fibo_json": {
+                        "prompt_text": "cinematic portrait with warm lighting",
+                        "camera": 50,
+                        "fov": 35,
+                        "lighting": "soft_rim",
+                        "palette": "warm",
+                        "hdr": False
+                    },
+                    "metadata": {"provider": "demo", "seed": 12345},
+                    "created_at": (datetime.now().replace(hour=10)).isoformat()
+                },
+                {
+                    "id": "demo2",
+                    "project_id": "default",
+                    "image_url": "https://picsum.photos/512/512?random=2",
+                    "fibo_json": {
+                        "prompt_text": "futuristic cityscape at sunset",
+                        "camera": 45,
+                        "fov": 40,
+                        "lighting": "dramatic",
+                        "palette": "cool",
+                        "hdr": True
+                    },
+                    "metadata": {"provider": "demo", "seed": 67890},
+                    "created_at": (datetime.now().replace(hour=14)).isoformat()
+                },
+                {
+                    "id": "demo3",
+                    "project_id": "default",
+                    "image_url": "https://picsum.photos/512/512?random=3",
+                    "fibo_json": {
+                        "prompt_text": "abstract art with vibrant colors",
+                        "camera": 35,
+                        "fov": 50,
+                        "lighting": "ambient",
+                        "palette": "vibrant",
+                        "hdr": False
+                    },
+                    "metadata": {"provider": "demo", "seed": 11111},
+                    "created_at": (datetime.now().replace(hour=16)).isoformat()
+                },
+                {
+                    "id": "demo4",
+                    "project_id": "demo",
+                    "image_url": "https://picsum.photos/512/512?random=4",
+                    "fibo_json": {
+                        "prompt_text": "minimalist architecture photography",
+                        "camera": 28,
+                        "fov": 60,
+                        "lighting": "natural",
+                        "palette": "monochrome",
+                        "hdr": True
+                    },
+                    "metadata": {"provider": "demo", "seed": 22222},
+                    "created_at": (datetime.now().replace(day=2, hour=9)).isoformat()
+                },
+                {
+                    "id": "demo5",
+                    "project_id": "demo",
+                    "image_url": "https://picsum.photos/512/512?random=5",
+                    "fibo_json": {
+                        "prompt_text": "fantasy landscape with magical elements",
+                        "camera": 85,
+                        "fov": 25,
+                        "lighting": "mystical",
+                        "palette": "ethereal",
+                        "hdr": False
+                    },
+                    "metadata": {"provider": "demo", "seed": 33333},
+                    "created_at": (datetime.now().replace(day=3, hour=15)).isoformat()
+                }
+            ]
+            
+            for render in demo_renders:
+                self.data["renders"][render["id"]] = render
+            
             self._save()
     
     def get_projects(self) -> List[Dict[str, Any]]:
