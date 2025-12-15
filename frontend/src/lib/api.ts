@@ -8,6 +8,15 @@ console.log('🔧 API Configuration:', {
   env: process.env.NEXT_PUBLIC_API_URL
 });
 
+// Override fetch to debug all API calls
+if (typeof window !== 'undefined') {
+  const originalFetch = window.fetch;
+  window.fetch = function(url, options) {
+    console.log('🌐 Fetch call:', url, options);
+    return originalFetch.call(this, url, options);
+  };
+}
+
 export interface FiboJson {
   prompt_text: string;
   camera: number;
