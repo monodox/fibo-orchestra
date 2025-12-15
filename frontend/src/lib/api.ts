@@ -1,4 +1,4 @@
-// frontend/src/lib/api.ts
+// frontend/src/lib/api.ts  
 const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
 
 export interface FiboJson {
