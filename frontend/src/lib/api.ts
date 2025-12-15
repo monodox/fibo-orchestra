@@ -1,6 +1,13 @@
 // frontend/src/lib/api.ts  
 const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
 
+// Debug API configuration
+console.log('🔧 API Configuration:', {
+  API_BASE,
+  hostname: typeof window !== 'undefined' ? window.location.hostname : 'server',
+  env: process.env.NEXT_PUBLIC_API_URL
+});
+
 export interface FiboJson {
   prompt_text: string;
   camera: number;
