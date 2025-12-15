@@ -20,9 +20,10 @@ export default function DashboardPage() {
       return;
     }
 
+    const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
     Promise.all([
-      fetch("http://localhost:8000/api/v1/projects").then(res => res.json()),
-      fetch("http://localhost:8000/api/v1/renders").then(res => res.json())
+      fetch(`${API_BASE}/projects`).then(res => res.json()),
+      fetch(`${API_BASE}/renders`).then(res => res.json())
     ])
       .then(([projectsData, rendersData]) => {
         const renders = rendersData.renders;
