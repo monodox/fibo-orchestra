@@ -2,7 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'fibo-orchestra.onrender.com'],
+  },
+  // Force cache invalidation
+  generateBuildId: async () => {
+    return `build-${Date.now()}`
   },
 }
 
