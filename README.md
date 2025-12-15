@@ -41,18 +41,22 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the console.
 
+> 🌐 **Live Demo**: [https://fibo-orchestra.vercel.app](https://fibo-orchestra.vercel.app)
+
 ### Backend Setup
 
 ```bash
 cd backend
-python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Unix/Mac
+python -m venv .venv311  # Use Python 3.11
+.venv311\Scripts\activate  # Windows
+# source .venv311/bin/activate  # Unix/Mac
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
 Backend API available at [http://localhost:8000](http://localhost:8000)
+
+> 🌐 **Production API**: [https://fibo-orchestra.onrender.com](https://fibo-orchestra.onrender.com)
 
 ### API Keys Setup
 
@@ -203,12 +207,6 @@ For commercial use, contact [Bria AI](https://bria.ai).
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-**Note**: This project's code is MIT licensed, but FIBO model usage is subject to Bria's license terms.
-
-## License
-
 This project is **open source** and available under the [MIT License](LICENSE).
 
 ```
@@ -226,6 +224,8 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 ```
+
+**Note**: This project's code is MIT licensed, but FIBO model usage is subject to Bria's license terms for non-commercial use.
 
 ## Contributing
 
