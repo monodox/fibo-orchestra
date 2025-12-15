@@ -8,7 +8,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability, please report it by emailing security@fibo-orchestra.com or opening a private security advisory on GitHub.
+If you discover a security vulnerability, please open a private security advisory on GitHub or contact the repository maintainers.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 

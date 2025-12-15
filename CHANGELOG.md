@@ -43,9 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - API keys stored client-side in localStorage (never in source code)
 - Secure API key transmission to backend via request headers
 
-## [0.1.0] - 2024-01-XX
+## [0.1.0] - 2025-01-15
 
 ### Added
-- Initial release
+- Initial public release
 - Core console functionality
+- Production deployment on Vercel and Render.com
+- Python 3.11 support
+- Automatic provider fallback system
 - Basic project and render management

@@ -5,10 +5,11 @@ Thank you for your interest in contributing! This document provides guidelines f
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/your-username/fibo-orchestra.git`
+2. Clone your fork: `git clone https://github.com/monodox/fibo-orchestra.git`
 3. Create a branch: `git checkout -b feature/your-feature-name`
-4. Install dependencies: `npm install`
-5. Start development server: `npm run dev`
+4. Install frontend dependencies: `cd frontend && npm install`
+5. Install backend dependencies: `cd backend && pip install -r requirements.txt`
+6. Start development servers: Frontend `npm run dev`, Backend `uvicorn app.main:app --reload`
 
 ## Development Guidelines
 

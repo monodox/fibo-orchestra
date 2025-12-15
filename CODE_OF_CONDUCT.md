@@ -28,7 +28,7 @@ Project maintainers are responsible for clarifying standards and will take appro
 
 ## Reporting
 
-Report violations to conduct@fibo-orchestra.com. All complaints will be reviewed and investigated promptly and fairly.
+Report violations via GitHub issues or contact project maintainers. All complaints will be reviewed and investigated promptly and fairly.
 
 ## Attribution
 
