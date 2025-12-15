@@ -25,9 +25,10 @@ export default function ProjectDetailPage() {
   const loadProject = () => {
     const projectId = params.id as string;
     
+    const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
     Promise.all([
-      fetch(`http://localhost:8000/api/v1/projects/${projectId}`).then(res => res.json()),
-      fetch(`http://localhost:8000/api/v1/renders?project_id=${projectId}`).then(res => res.json())
+      fetch(`${API_BASE}/projects/${projectId}`).then(res => res.json()),
+      fetch(`${API_BASE}/renders?project_id=${projectId}`).then(res => res.json())
     ])
       .then(([projectData, rendersData]) => {
         setProject(projectData);
@@ -45,7 +46,8 @@ export default function ProjectDetailPage() {
 
   const handleEdit = async () => {
     try {
-      await fetch(`http://localhost:8000/api/v1/projects/${params.id}`, {
+      const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
+      await fetch(`${API_BASE}/projects/${params.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, description })
@@ -61,7 +63,8 @@ export default function ProjectDetailPage() {
     if (!confirm("Delete this project and all its renders?")) return;
     
     try {
-      await fetch(`http://localhost:8000/api/v1/projects/${params.id}`, {
+      const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
+      await fetch(`${API_BASE}/projects/${params.id}`, {
         method: "DELETE"
       });
       router.push("/console/projects");
@@ -93,9 +96,10 @@ export default function ProjectDetailPage() {
     if (!confirm(`Delete ${selectedRenders.size} selected render(s)?`)) return;
     
     try {
+      const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
       await Promise.all(
         Array.from(selectedRenders).map(id =>
-          fetch(`http://localhost:8000/api/v1/renders/${id}`, { method: "DELETE" })
+          fetch(`${API_BASE}/renders/${id}`, { method: "DELETE" })
         )
       );
       setSelectedRenders(new Set());

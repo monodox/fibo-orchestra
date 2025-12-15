@@ -8,7 +8,7 @@ from .config import settings
 
 def render_from_json(fibo_json: Dict[str, Any], seed: int | None = None, size: str = "512x512", api_keys: Dict[str, str] = None) -> Tuple[bytes, Dict[str, Any]]:
     """
-    Renders image from FIBO JSON using configured provider.
+    Renders image from FIBO JSON using configured provider with automatic fallback.
     Returns: (image_bytes, metadata)
     """
     api_keys = api_keys or {}
@@ -19,154 +19,146 @@ def render_from_json(fibo_json: Dict[str, Any], seed: int | None = None, size: s
     bria_key = api_keys.get("bria") or settings.BRIA_API_KEY
     runware_key = api_keys.get("runware") or settings.RUNWARE_API_KEY
     
-    # Auto-detect provider based on available API keys
-    # Priority: bria > replicate > fal > runware (since this is FIBO Orchestra)
-    provider = settings.RENDER_PROVIDER
+    print(f"🔑 API Keys available - Replicate: {bool(replicate_key)}, FAL: {bool(fal_key)}, Bria: {bool(bria_key)}, Runware: {bool(runware_key)}")
     
-    # Override provider if API key is provided and configured provider has no key
-    if provider == "replicate" and not replicate_key:
-        if bria_key:
-            provider = "bria"
-        elif fal_key:
-            provider = "fal"
-        elif runware_key:
-            provider = "runware"
+    # Try providers in priority order with automatic fallback
+    # Priority: bria > fal > replicate > runware
+    providers_to_try = []
     
-    if provider == "replicate" and replicate_key:
-        return _render_replicate(fibo_json, seed, size, replicate_key)
-    elif provider == "fal" and fal_key:
-        return _render_fal(fibo_json, seed, size, fal_key)
-    elif provider == "bria" and bria_key:
-        return _render_bria(fibo_json, seed, size, bria_key)
-    elif provider == "runware" and runware_key:
-        return _render_runware(fibo_json, seed, size, runware_key)
-    else:
-        # Try any available key as last resort
-        if bria_key:
-            return _render_bria(fibo_json, seed, size, bria_key)
-        elif replicate_key:
-            return _render_replicate(fibo_json, seed, size, replicate_key)
-        elif fal_key:
-            return _render_fal(fibo_json, seed, size, fal_key)
-        elif runware_key:
-            return _render_runware(fibo_json, seed, size, runware_key)
-        else:
-            return _render_placeholder(fibo_json, seed, size)
+    if bria_key:
+        providers_to_try.append(("bria", bria_key, _render_bria))
+    if fal_key:
+        providers_to_try.append(("fal", fal_key, _render_fal))
+    if replicate_key:
+        providers_to_try.append(("replicate", replicate_key, _render_replicate))
+    if runware_key:
+        providers_to_try.append(("runware", runware_key, _render_runware))
+    
+    if not providers_to_try:
+        print(f"⚠️ No API keys available - using placeholder image")
+        print(f"💡 Add API keys in the Integrations page or backend/.env file")
+        return _render_placeholder(fibo_json, seed, size)
+    
+    # Try each provider until one succeeds
+    last_error = None
+    for provider_name, api_key, render_func in providers_to_try:
+        try:
+            print(f"🎨 Trying {provider_name.upper()} provider...")
+            result = render_func(fibo_json, seed, size, api_key)
+            print(f"✅ Successfully generated image with {provider_name.upper()}")
+            return result
+        except Exception as e:
+            last_error = e
+            print(f"❌ {provider_name.upper()} failed: {str(e)[:100]}")
+            continue
+    
+    # All providers failed
+    print(f"⚠️ All providers failed. Last error: {last_error}")
+    print(f"💡 Using placeholder. Check your API keys have sufficient credits.")
+    return _render_placeholder(fibo_json, seed, size)
 
 def _render_replicate(fibo_json: Dict[str, Any], seed: int | None, size: str, api_key: str) -> Tuple[bytes, Dict[str, Any]]:
     """Render using Replicate API"""
-    try:
-        client = replicate.Client(api_token=api_key)
-        output = client.run(
-            "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-            input={
-                "prompt": fibo_json.get("prompt_text", ""),
-                "width": int(size.split("x")[0]),
-                "height": int(size.split("x")[1]),
-                "seed": seed
-            }
-        )
-        # Download image
-        response = httpx.get(output[0])
-        metadata = {"size": size, "seed": seed, "provider": "replicate"}
-        return response.content, metadata
-    except Exception as e:
-        print(f"Replicate render failed: {e}")
-        return _render_placeholder(fibo_json, seed, size)
+    client = replicate.Client(api_token=api_key)
+    output = client.run(
+        "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+        input={
+            "prompt": fibo_json.get("prompt_text", ""),
+            "width": int(size.split("x")[0]),
+            "height": int(size.split("x")[1]),
+            "seed": seed
+        }
+    )
+    # Download image
+    response = httpx.get(output[0])
+    metadata = {"size": size, "seed": seed, "provider": "replicate"}
+    return response.content, metadata
 
 def _render_fal(fibo_json: Dict[str, Any], seed: int | None, size: str, api_key: str) -> Tuple[bytes, Dict[str, Any]]:
     """Render using FAL.ai API"""
-    try:
-        w, h = size.split("x")
-        response = httpx.post(
-            "https://fal.run/fal-ai/fast-sdxl",
-            headers={"Authorization": f"Key {api_key}"},
-            json={
-                "prompt": fibo_json.get("prompt_text", ""),
-                "image_size": {"width": int(w), "height": int(h)},
-                "seed": seed
-            },
-            timeout=60
-        )
-        result = response.json()
-        img_url = result["images"][0]["url"]
-        img_response = httpx.get(img_url)
-        metadata = {"size": size, "seed": seed, "provider": "fal"}
-        return img_response.content, metadata
-    except Exception as e:
-        print(f"FAL render failed: {e}")
-        return _render_placeholder(fibo_json, seed, size)
+    w, h = size.split("x")
+    response = httpx.post(
+        "https://fal.run/fal-ai/fast-sdxl",
+        headers={"Authorization": f"Key {api_key}"},
+        json={
+            "prompt": fibo_json.get("prompt_text", ""),
+            "image_size": {"width": int(w), "height": int(h)},
+            "seed": seed
+        },
+        timeout=60
+    )
+    result = response.json()
+    img_url = result["images"][0]["url"]
+    img_response = httpx.get(img_url)
+    metadata = {"size": size, "seed": seed, "provider": "fal"}
+    return img_response.content, metadata
 
 def _render_bria(fibo_json: Dict[str, Any], seed: int | None, size: str, api_key: str) -> Tuple[bytes, Dict[str, Any]]:
     """Render using Bria FIBO API v2 with optional structured prompt"""
-    try:
-        # Map size to aspect ratio
-        aspect_ratio_map = {
-            "512x512": "1:1",
-            "768x512": "3:2",
-            "512x768": "2:3",
-            "1024x1024": "1:1",
+    # Map size to aspect ratio
+    aspect_ratio_map = {
+        "512x512": "1:1",
+        "768x512": "3:2",
+        "512x768": "2:3",
+        "1024x1024": "1:1",
+    }
+    aspect_ratio = aspect_ratio_map.get(size, "1:1")
+    
+    payload = {
+        "prompt": fibo_json.get("prompt_text", ""),
+        "model_version": "FIBO",
+        "negative_prompt": fibo_json.get("negative_prompt", ""),
+        "aspect_ratio": aspect_ratio,
+        "steps_num": 50,
+        "guidance_scale": 5,
+        "seed": seed or 123456
+    }
+    
+    # Add structured_prompt if available (for refinement)
+    if "structured_prompt" in fibo_json and fibo_json["structured_prompt"]:
+        payload["structured_prompt"] = fibo_json["structured_prompt"]
+    
+    headers = {
+        "Content-Type": "application/json",
+        "api_token": api_key
+    }
+    
+    # Initial request
+    response = httpx.post(
+        "https://engine.prod.bria-api.com/v2/image/generate",
+        json=payload,
+        headers=headers,
+        timeout=10
+    )
+    
+    if response.status_code in (200, 202):
+        result = response.json()
+        status_url = result.get("status_url")
+        request_id = result.get("request_id")
+        
+        if not status_url:
+            raise Exception("No status_url returned from Bria API")
+        
+        # Poll for completion
+        final_result = _poll_bria_status(status_url, api_key)
+        
+        result_data = final_result.get("result", {})
+        image_url = result_data.get("image_url")
+        structured_prompt = result_data.get("structured_prompt", "")
+        used_seed = result_data.get("seed")
+        
+        # Download image
+        img_response = httpx.get(image_url)
+        metadata = {
+            "size": size,
+            "seed": used_seed,
+            "provider": "bria",
+            "structured_prompt": structured_prompt,
+            "request_id": request_id
         }
-        aspect_ratio = aspect_ratio_map.get(size, "1:1")
-        
-        payload = {
-            "prompt": fibo_json.get("prompt_text", ""),
-            "model_version": "FIBO",
-            "negative_prompt": fibo_json.get("negative_prompt", ""),
-            "aspect_ratio": aspect_ratio,
-            "steps_num": 50,
-            "guidance_scale": 5,
-            "seed": seed or 123456
-        }
-        
-        # Add structured_prompt if available (for refinement)
-        if "structured_prompt" in fibo_json and fibo_json["structured_prompt"]:
-            payload["structured_prompt"] = fibo_json["structured_prompt"]
-        
-        headers = {
-            "Content-Type": "application/json",
-            "api_token": api_key
-        }
-        
-        # Initial request
-        response = httpx.post(
-            "https://engine.prod.bria-api.com/v2/image/generate",
-            json=payload,
-            headers=headers,
-            timeout=10
-        )
-        
-        if response.status_code in (200, 202):
-            result = response.json()
-            status_url = result.get("status_url")
-            request_id = result.get("request_id")
-            
-            if not status_url:
-                raise Exception("No status_url returned from Bria API")
-            
-            # Poll for completion
-            final_result = _poll_bria_status(status_url, api_key)
-            
-            result_data = final_result.get("result", {})
-            image_url = result_data.get("image_url")
-            structured_prompt = result_data.get("structured_prompt", "")
-            used_seed = result_data.get("seed")
-            
-            # Download image
-            img_response = httpx.get(image_url)
-            metadata = {
-                "size": size,
-                "seed": used_seed,
-                "provider": "bria",
-                "structured_prompt": structured_prompt,
-                "request_id": request_id
-            }
-            return img_response.content, metadata
-        
-        raise Exception(f"Bria API error: {response.status_code} {response.text}")
-    except Exception as e:
-        print(f"Bria render failed: {e}")
-        return _render_placeholder(fibo_json, seed, size)
+        return img_response.content, metadata
+    
+    raise Exception(f"Bria API error: {response.status_code} {response.text}")
 
 def _poll_bria_status(status_url: str, api_token: str, max_attempts: int = 60) -> dict:
     """Poll Bria status URL until completion"""
@@ -193,39 +185,35 @@ def _poll_bria_status(status_url: str, api_token: str, max_attempts: int = 60) -
 
 def _render_runware(fibo_json: Dict[str, Any], seed: int | None, size: str, api_key: str) -> Tuple[bytes, Dict[str, Any]]:
     """Render using Runware API"""
-    try:
-        from runware import Runware, IImageInference
-        import asyncio
+    from runware import Runware, IImageInference
+    import asyncio
+    
+    async def generate():
+        runware = Runware(api_key=api_key)
+        await runware.connect()
         
-        async def generate():
-            runware = Runware(api_key=api_key)
-            await runware.connect()
-            
-            w, h = map(int, size.split("x"))
-            
-            request = IImageInference(
-                positivePrompt=fibo_json.get("prompt_text", ""),
-                model="runware:100@1",  # Default Runware model
-                width=w,
-                height=h,
-                numberResults=1,
-                seed=seed if seed else None
-            )
-            
-            images = await runware.imageInference(requestImage=request)
-            
-            if images and len(images) > 0:
-                img_url = images[0].imageURL
-                response = httpx.get(img_url)
-                metadata = {"size": size, "seed": seed, "provider": "runware"}
-                return response.content, metadata
-            
-            raise Exception("No images returned from Runware")
+        w, h = map(int, size.split("x"))
         
-        return asyncio.run(generate())
-    except Exception as e:
-        print(f"Runware render failed: {e}")
-        return _render_placeholder(fibo_json, seed, size)
+        request = IImageInference(
+            positivePrompt=fibo_json.get("prompt_text", ""),
+            model="runware:100@1",  # Default Runware model
+            width=w,
+            height=h,
+            numberResults=1,
+            seed=seed if seed else None
+        )
+        
+        images = await runware.imageInference(requestImage=request)
+        
+        if images and len(images) > 0:
+            img_url = images[0].imageURL
+            response = httpx.get(img_url)
+            metadata = {"size": size, "seed": seed, "provider": "runware"}
+            return response.content, metadata
+        
+        raise Exception("No images returned from Runware")
+    
+    return asyncio.run(generate())
 
 def _render_placeholder(fibo_json: Dict[str, Any], seed: int | None, size: str) -> Tuple[bytes, Dict[str, Any]]:
     """Fallback placeholder renderer"""

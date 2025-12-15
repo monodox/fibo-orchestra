@@ -27,7 +27,8 @@ export default function ProjectsPage() {
       }
     }
 
-    fetch("http://localhost:8000/api/v1/projects")
+    const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
+    fetch(`${API_BASE}/projects`)
       .then(res => res.json())
       .then(data => {
         setProjects(data.projects);
@@ -45,7 +46,8 @@ export default function ProjectsPage() {
     if (!name) return;
     
     try {
-      await fetch("http://localhost:8000/api/v1/projects", {
+      const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
+      await fetch(`${API_BASE}/projects`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, description })
