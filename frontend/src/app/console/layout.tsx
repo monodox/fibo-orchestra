@@ -2,7 +2,8 @@
 
 import { ConsoleSidebar } from "@/components/ConsoleSidebar";
 import { ConsoleHeader } from "@/components/ConsoleHeader";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function ConsoleLayout({
   children,
@@ -10,6 +11,16 @@ export default function ConsoleLayout({
   children: React.ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const isAuthenticated = localStorage.getItem("isAuthenticated");
+    
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [router]);
 
   return (
     <div className="h-screen">

@@ -15,11 +15,19 @@ export default function IntegrationsPage() {
   const [saved, setSaved] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load saved keys from localStorage
-    setReplicateKey(localStorage.getItem("replicate_api_key") || "");
-    setFalKey(localStorage.getItem("fal_api_key") || "");
-    setBriaKey(localStorage.getItem("bria_api_key") || "");
-    setRunwareKey(localStorage.getItem("runware_api_key") || "");
+    // Load demo credentials or saved keys
+    setReplicateKey(localStorage.getItem("replicate_api_key") || "demo_r8_abcdef123456789");
+    setFalKey(localStorage.getItem("fal_api_key") || "demo_fal_key_xyz789");
+    setBriaKey(localStorage.getItem("bria_api_key") || "demo_bria_key_12345");
+    setRunwareKey(localStorage.getItem("runware_api_key") || "demo_runware_token_456");
+    
+    // Auto-save demo credentials if none exist
+    if (!localStorage.getItem("replicate_api_key")) {
+      localStorage.setItem("replicate_api_key", "demo_r8_abcdef123456789");
+      localStorage.setItem("fal_api_key", "demo_fal_key_xyz789");
+      localStorage.setItem("bria_api_key", "demo_bria_key_12345");
+      localStorage.setItem("runware_api_key", "demo_runware_token_456");
+    }
   }, []);
 
   const saveKey = (provider: string, key: string) => {
