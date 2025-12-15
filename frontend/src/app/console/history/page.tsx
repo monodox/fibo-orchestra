@@ -20,7 +20,8 @@ export default function HistoryPage() {
       }
     }
 
-    fetch("http://localhost:8000/api/v1/renders")
+    const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
+    fetch(`${API_BASE}/renders`)
       .then(res => res.json())
       .then(data => {
         setRenders(data.renders);
@@ -38,7 +39,8 @@ export default function HistoryPage() {
     if (!confirm("Delete this render?")) return;
     
     try {
-      await fetch(`http://localhost:8000/api/v1/renders/${renderId}`, {
+      const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
+      await fetch(`${API_BASE}/renders/${renderId}`, {
         method: "DELETE"
       });
       cacheClear('history-renders');
@@ -53,7 +55,8 @@ export default function HistoryPage() {
     if (!confirm("Clear all history? This cannot be undone.")) return;
     
     try {
-      await fetch("http://localhost:8000/api/v1/renders", {
+      const API_BASE = "https://fibo-orchestra.onrender.com/api/v1";
+      await fetch(`${API_BASE}/renders`, {
         method: "DELETE"
       });
       cacheClear('history-renders');
